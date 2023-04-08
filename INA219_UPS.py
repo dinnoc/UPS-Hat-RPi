@@ -9,6 +9,9 @@ from time import sleep
 from os import path
 import smbus
 import time
+import paho.mqtt.publish as publish
+
+MQTT_BROKER_ADDRESS = "192.168.1.176"
 
 
 DIR_PATH = path.abspath(path.dirname(__file__))
@@ -165,6 +168,16 @@ while True:
         if(p < 0):p = 0
 
 
+        try:
+           # Publish message to broker
+            publish.single("UPSHAT/loadVoltageV", "{:6.3f}".format(bus_voltage).strip(), hostname=MQTT_BROKER_ADDRESS)
+            publish.single("UPSHAT/CurrentA", "{:9.6f}".format(current/1000).strip(), hostname=MQTT_BROKER_ADDRESS)
+            publish.single("UPSHAT/PowerW", "{:6.3f}".format(power).strip(), hostname=MQTT_BROKER_ADDRESS)
+            publish.single("UPSHAT/Percent%", "{:3.1f}".format(p).strip(), hostname=MQTT_BROKER_ADDRESS)
+        except Exception as e:
+            print("Error publishing message: " + str(e))
+
+
         print("Load Voltage:  {:6.3f} V".format(bus_voltage))
         print("Current:       {:9.6f} A".format(current/1000))
         print("Power:         {:6.3f} W".format(power))
@@ -178,4 +191,4 @@ while True:
         oled_display.PrintText("Percent = {:3.1f}%".format(p),cords=(0,24), FontSize=10)
         oled_display.ShowImage()
 
-        time.sleep(2)
+        time.sleep(60)
